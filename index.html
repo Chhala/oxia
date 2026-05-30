@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Oxia" />
+  <meta name="theme-color" content="#080C18" />
+  <meta name="description" content="Exercices de respiration guidés. 6 protocoles scientifiques." />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+
+  <title>Oxia — Breathwork</title>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════
+       HOME SCREEN
+  ════════════════════════════════════════════════ -->
+  <div id="home">
+
+    <header class="app-header">
+      <span class="app-logo">OXIA</span>
+      <span class="app-tagline">Breathwork</span>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero-section" aria-label="Protocole principal">
+      <div id="hero-tile" class="hero-tile" role="region" aria-label="Protocole sélectionné">
+        <!-- Populated by JS -->
+      </div>
+      <div id="hero-controls" class="hero-controls">
+        <!-- Populated by JS: slider, mode toggle, play button, Wim Hof level -->
+      </div>
+    </section>
+
+    <!-- Grid Section -->
+    <section id="grid-section" aria-label="Autres protocoles">
+      <h3 class="grid-title">Autres protocoles</h3>
+      <div id="protocol-grid" class="protocol-grid" role="list">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>Appuyez sur une tuile pour la sélectionner · <strong>?</strong> pour en savoir plus</p>
+    </footer>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       PLAYER (Fullscreen, position:fixed — iOS Safe)
+  ════════════════════════════════════════════════ -->
+  <div id="player" class="player hidden" role="main" aria-label="Session de respiration">
+
+    <!-- Starfield canvas (Immersive mode only) -->
+    <canvas id="starfield" aria-hidden="true"></canvas>
+
+    <!-- Solid color background layer -->
+    <div id="phase-bg" class="phase-bg" aria-hidden="true"></div>
+
+    <!-- Idle countdown (3…2…1) -->
+    <div id="countdown-display" class="countdown-display" aria-live="assertive"></div>
+
+    <!-- Core breathing UI -->
+    <div id="player-core" class="player-core">
+      <div id="progress-display" class="progress-display" aria-live="polite"></div>
+
+      <div id="breath-circle-wrap" class="breath-circle-wrap">
+        <div id="breath-circle" class="breath-circle" aria-hidden="true">
+          <div class="circle-inner"></div>
+        </div>
+      </div>
+
+      <div id="phase-label" class="phase-label" aria-live="polite"></div>
+      <div id="phase-text" class="phase-text" aria-live="assertive"></div>
+    </div>
+
+    <!-- Floating controls (auto-hide) -->
+    <div id="player-controls" class="player-controls visible">
+      <button id="btn-back" class="ctrl-btn ctrl-back" aria-label="Arrêter et revenir">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        <span>Arrêter</span>
+      </button>
+      <button id="btn-play-pause" class="ctrl-btn ctrl-play" aria-label="Pause">
+        <svg id="icon-pause" viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>
+        </svg>
+        <svg id="icon-play" viewBox="0 0 24 24" width="26" height="26" fill="currentColor" class="hidden">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BOTTOM SHEET (Information Drawer)
+  ════════════════════════════════════════════════ -->
+  <div id="sheet-overlay" class="sheet-overlay" role="presentation" aria-hidden="true"></div>
+  <div id="bottom-sheet" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Informations sur le protocole">
+    <div id="sheet-content" class="sheet-content">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
