@@ -79,8 +79,8 @@ body {
 /* ── App Header ────────────────────────────────────────── */
 .app-header {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
   padding: 8px 0 18px;
 }
 
@@ -93,13 +93,6 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.app-tagline {
-  font-size: 13px;
-  color: var(--c-text-muted);
-  letter-spacing: 0.06em;
-  font-weight: 400;
 }
 
 /* ── Hero Section ──────────────────────────────────────── */
@@ -620,6 +613,8 @@ body {
   max-height: 60vh;
   transform: translateY(100%);
   transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 .bottom-sheet.open {
@@ -627,13 +622,15 @@ body {
 }
 
 .sheet-content {
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  height: 100%;
   padding: 16px 20px calc(var(--safe-bottom) + 24px);
   display: flex;
   flex-direction: column;
   gap: 18px;
+  /* Force scrollability on iOS */
+  overscroll-behavior: contain;
 }
 
 .sheet-handle {

@@ -124,7 +124,7 @@ const PROTOCOLS = {
 
   lymphatic: {
     id: 'lymphatic',
-    name: 'Lymphatique (Tony Robbins)',
+    name: 'Respiration Lymphatique',
     icon: '🔋',
     summary: 'Stimulation immunitaire et détoxification. Ratio 1:4:2.',
     info: {
@@ -666,7 +666,6 @@ class UIEngine {
       <div class="hero-body">
         <h2 class="hero-name">${proto.name}</h2>
         <p class="hero-summary">${proto.summary}</p>
-        <div class="hero-usage">Lancé ${usage[heroId] || 0} fois</div>
       </div>
       <button class="btn-info" data-id="${heroId}" aria-label="Informations sur ${proto.name}">?</button>
     `;
@@ -679,13 +678,13 @@ class UIEngine {
       <div class="controls-row">
         <div class="slider-group">
           <label for="duration-slider">Durée base</label>
-          <input type="range" id="duration-slider" min="2" max="8" step="0.5"
+          <input type="range" id="duration-slider" min="2" max="8" step="1"
                  value="${this.app.baseDuration}" aria-label="Durée de base en secondes">
           <span id="slider-value">${this.app.baseDuration}s</span>
         </div>
         <button class="btn-mode-toggle ${mode === 'immersive' ? 'active' : ''}" id="mode-toggle"
                 aria-label="Changer le mode d'affichage">
-          ${mode === 'solid' ? '🌈 Couleurs' : '✨ Immersif'}
+          ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
         </button>
         <button class="btn-hero-play" id="btn-hero-play" aria-label="Démarrer l'exercice">
           ▶ Démarrer
@@ -698,7 +697,7 @@ class UIEngine {
     const slider = document.getElementById('duration-slider');
     const sliderVal = document.getElementById('slider-value');
     slider.addEventListener('input', e => {
-      const v = parseFloat(e.target.value);
+      const v = parseInt(e.target.value, 10);
       sliderVal.textContent = `${v}s`;
       this.app.baseDuration = v;
       StorageEngine.setBaseDuration(v);
@@ -732,7 +731,6 @@ class UIEngine {
              aria-label="${p.name}">
           <span class="tile-emoji">${p.icon}</span>
           <span class="tile-name">${p.name}</span>
-          <span class="tile-count">${usage[id] || 0}×</span>
           <button class="tile-info-btn" data-id="${id}" aria-label="Info ${p.name}">?</button>
         </div>
       `;
@@ -1022,11 +1020,11 @@ class App {
   /**
    * Sélection d'un protocole depuis la grille.
    * Swap instantané du héros. Tri de la grille différé (hors-champ).
+   * NB : le compteur N'est PAS incrémenté ici — uniquement au lancement.
    */
   selectProtocol(id) {
     this.heroId = id;
     StorageEngine.setLastProtocol(id);
-    StorageEngine.incrementUsage(id);
 
     // 1. Mise à jour immédiate du héros
     this._renderHome();
@@ -1054,9 +1052,7 @@ class App {
     this.ui.showPlayer(this.mode);
     if (this.mode === 'immersive') this.audio.play();
 
-    // Incrémenter le compteur d'usage pour la session (en plus du clic sur tuile)
-    // Note : l'incrémentation principale est dans selectProtocol / renderHome
-    // Ici on incrémente si on relance depuis le héros sans re-sélection
+    // Incrémentation du compteur uniquement au lancement effectif
     StorageEngine.incrementUsage(this.heroId);
 
     this.engine = new BreathingEngine(
