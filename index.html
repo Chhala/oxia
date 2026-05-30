@@ -64,9 +64,6 @@
     <!-- Solid color background layer -->
     <div id="phase-bg" class="phase-bg" aria-hidden="true"></div>
 
-    <!-- Idle countdown (3…2…1) -->
-    <div id="countdown-display" class="countdown-display" aria-live="assertive"></div>
-
     <!-- Core breathing UI -->
     <div id="player-core" class="player-core">
       <div id="progress-display" class="progress-display" aria-live="polite"></div>
@@ -75,6 +72,8 @@
         <div id="breath-circle" class="breath-circle" aria-hidden="true">
           <div class="circle-inner"></div>
         </div>
+        <!-- Idle countdown (3…2…1) — centré dans le cercle -->
+        <div id="countdown-display" class="countdown-display" aria-live="assertive"></div>
       </div>
 
       <div id="phase-label" class="phase-label" aria-live="polite"></div>

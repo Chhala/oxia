@@ -146,6 +146,18 @@ const PROTOCOLS = {
   }
 };
 
+const PROTOCOL_DEFAULTS = {
+  physiological_sigh: 4,  // 4s → 4 / 1 / 8s
+  cardiac_coherence:  5,  // fixe (slider masqué)
+  wim_hof:            3,  // fixe (slider masqué)
+  four_seven_eight:   4,  // 4 / 7 / 8s — ratio scientifique exact
+  box_breathing:      4,  // 4 / 4 / 4 / 4s — valeur Navy SEALs
+  lymphatic:          3,  // 3 / 12 / 6s — ratio 1:4:2 raisonnable
+};
+
+/** Protocoles pour lesquels le slider est masqué (durée fixe) */
+const PROTOCOLS_NO_SLIDER = new Set(['cardiac_coherence', 'wim_hof']);
+
 /** Ordre de référence (tri à égalité de score) */
 const PROTOCOL_ORDER = [
   'physiological_sigh', 'cardiac_coherence', 'wim_hof',
@@ -190,8 +202,23 @@ const StorageEngine = {
   getLastProtocol()     { return this._get(this.KEYS.LAST, 'physiological_sigh'); },
   setLastProtocol(id)   { this._set(this.KEYS.LAST, id); },
 
-  getBaseDuration()     { return this._get(this.KEYS.BASE_DURATION, 4); },
-  setBaseDuration(v)    { this._set(this.KEYS.BASE_DURATION, v); },
+  /**
+   * Retourne la durée de base pour un protocole donné.
+   * Stocké sous forme d'objet { [protocolId]: seconds }.
+   * Valeur par défaut : PROTOCOL_DEFAULTS[id].
+   */
+  getDurations() {
+    return this._get(this.KEYS.BASE_DURATION, {});
+  },
+  getDurationFor(id) {
+    const map = this.getDurations();
+    return map[id] !== undefined ? map[id] : (PROTOCOL_DEFAULTS[id] || 4);
+  },
+  setDurationFor(id, v) {
+    const map = this.getDurations();
+    map[id] = v;
+    this._set(this.KEYS.BASE_DURATION, map);
+  },
 
   getMode()             { return this._get(this.KEYS.MODE, 'solid'); }, // 'solid' | 'immersive'
   setMode(v)            { this._set(this.KEYS.MODE, v); },
@@ -673,15 +700,19 @@ class UIEngine {
       .addEventListener('click', e => { e.stopPropagation(); this.app.openInfo(heroId); });
 
     // ── Contrôles héros
-    const mode = this.app.mode;
+    const mode      = this.app.mode;
+    const hideSlider = PROTOCOLS_NO_SLIDER.has(heroId);
+    const dur        = this.app.baseDuration;
+
     this.$heroControls.innerHTML = `
       <div class="controls-row">
+        ${hideSlider ? '' : `
         <div class="slider-group">
           <label for="duration-slider">Durée base</label>
           <input type="range" id="duration-slider" min="2" max="8" step="1"
-                 value="${this.app.baseDuration}" aria-label="Durée de base en secondes">
-          <span id="slider-value">${this.app.baseDuration}s</span>
-        </div>
+                 value="${dur}" aria-label="Durée de base en secondes">
+          <span id="slider-value">${dur}s</span>
+        </div>`}
         <button class="btn-mode-toggle ${mode === 'immersive' ? 'active' : ''}" id="mode-toggle"
                 aria-label="Changer le mode d'affichage">
           ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
@@ -693,15 +724,17 @@ class UIEngine {
       ${heroId === 'wim_hof' ? this._wimHofLevelHTML() : ''}
     `;
 
-    // Slider events
-    const slider = document.getElementById('duration-slider');
-    const sliderVal = document.getElementById('slider-value');
-    slider.addEventListener('input', e => {
-      const v = parseInt(e.target.value, 10);
-      sliderVal.textContent = `${v}s`;
-      this.app.baseDuration = v;
-      StorageEngine.setBaseDuration(v);
-    });
+    // Slider events (uniquement si slider présent)
+    if (!hideSlider) {
+      const slider    = document.getElementById('duration-slider');
+      const sliderVal = document.getElementById('slider-value');
+      slider.addEventListener('input', e => {
+        const v = parseInt(e.target.value, 10);
+        sliderVal.textContent = `${v}s`;
+        this.app.baseDuration = v;
+        StorageEngine.setDurationFor(heroId, v);
+      });
+    }
 
     // Mode toggle
     document.getElementById('mode-toggle').addEventListener('click', () => this.app.toggleMode());
@@ -987,9 +1020,12 @@ class App {
   constructor() {
     // ── État global persisté
     this.heroId      = StorageEngine.getLastProtocol();
-    this.baseDuration = StorageEngine.getBaseDuration();
-    this.mode        = StorageEngine.getMode();    // 'solid' | 'immersive'
+    this.mode        = StorageEngine.getMode();
     this.wimHofLevel = StorageEngine.getWimHofLevel();
+
+    // baseDuration est désormais lu/écrit par protocole
+    // this.baseDuration = durée du protocole actif (prop de commodité)
+    this.baseDuration = StorageEngine.getDurationFor(this.heroId);
 
     // ── Moteurs
     this.audio   = new AudioEngine();
@@ -1025,6 +1061,9 @@ class App {
   selectProtocol(id) {
     this.heroId = id;
     StorageEngine.setLastProtocol(id);
+
+    // Charger la durée propre à ce protocole
+    this.baseDuration = StorageEngine.getDurationFor(id);
 
     // 1. Mise à jour immédiate du héros
     this._renderHome();
