@@ -1158,8 +1158,8 @@ class App {
 
         onPhaseChange: (phase) => {
           this.ui.onPhaseChange(phase, this.mode);
-          // Afficher les contrôles brièvement à chaque changement de phase
-          this.ui.showControls();
+          // Contrôles visibles au changement de phase en mode solid uniquement
+          if (this.mode === 'solid') this.ui.showControls();
         },
 
         onTick: (data) => this.ui.onTick(data),
