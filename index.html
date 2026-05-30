@@ -10,7 +10,10 @@
   <meta name="description" content="Exercices de respiration guidés. 6 protocoles scientifiques." />
 
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <!-- iOS Safari lit UNIQUEMENT ces balises pour l'icône d'écran d'accueil -->
+  <!-- Le champ "icons" du manifest.json est ignoré par iOS -->
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
   <link rel="stylesheet" href="style.css" />
 
   <title>Oxia</title>
