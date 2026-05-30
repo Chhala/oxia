@@ -3,7 +3,14 @@
    iOS Safari PWA · Safe Areas · Faux Full Screen CSS
    ================================================================ */
 
-/* ── TOKENS ─────────────────────────────────────────────── */
+/* ── FONT ────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Comfortaa';
+  src: url('comfortaa-v47-latin-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
 :root {
   /* Phase colors */
   --c-inhale:  #4A90E2;
@@ -85,14 +92,24 @@ body {
 }
 
 .app-logo {
+  font-family: 'Comfortaa', sans-serif;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.18em;
-  color: var(--c-text);
-  background: linear-gradient(135deg, #fff 0%, var(--c-accent) 100%);
+  display: inline-block;
+  background: linear-gradient(to right, #fff 0%, var(--c-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Correction optique du )( central */
+.logo-x {
+  display: inline-block;
+  letter-spacing: -0.01em;
+  margin-left: 0.02em;
+  margin-right: 0.32em;
+  vertical-align: 0.13em;
 }
 
 /* ── Hero Section ──────────────────────────────────────── */
