@@ -4,13 +4,14 @@
  * Permet le fonctionnement hors-ligne (PWA iOS)
  */
 
-const CACHE_NAME = 'oxia-v2';
+const CACHE_NAME = 'oxia-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
+  './SL_Pads_110_Cm.mp3',
 ];
 
 /* ── Install : mise en cache des assets ── */

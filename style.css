@@ -494,14 +494,25 @@ body {
   pointer-events: none;
 }
 
-/* Progress display (timer or cycle counter) */
+/* Progress display — angle supérieur gauche, style barre de statut iOS */
 .progress-display {
-  font-size: 15px;
+  position: fixed;
+  top:  calc(var(--safe-top)  + 16px);
+  left: calc(var(--safe-left) + 24px);
+  z-index: 20;
+  font-size: 16px;
   font-weight: 600;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 0.04em;
-  height: 22px;
-  text-align: center;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.82);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* Mode immersif : discret, fondu dans le cosmos */
+.player.mode-immersive .progress-display {
+  color: rgba(255,255,255,0.28);
+  font-weight: 300;
 }
 
 /* Breathing circle */
@@ -560,7 +571,7 @@ body {
 
 /* Phase text (main instruction) */
 .phase-text {
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 600;
   text-align: center;
   color: rgba(255,255,255,0.95);
@@ -577,6 +588,18 @@ body {
 .player.mode-solid .phase-text { color: rgba(255,255,255,0.97); }
 .player.mode-solid .phase-label { color: rgba(255,255,255,0.6); }
 .player.mode-solid .progress-display { color: rgba(255,255,255,0.6); }
+
+/* Immersive mode: textes fondus dans le cosmos, décalés vers le bas */
+.player.mode-immersive .phase-label {
+  margin-top: 72px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: 0.14em;
+}
+.player.mode-immersive .phase-text {
+  font-weight: 300;
+  color: rgba(255,255,255,0.42);
+}
 
 /* ── Player Controls (auto-hide) ───────────────────────── */
 .player-controls {

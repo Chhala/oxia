@@ -237,129 +237,119 @@ const StorageEngine = {
 };
 
 /* ================================================================
-   3. AUDIO ENGINE — Ambiance procédurale gapless (Web Audio API)
+   3. AUDIO ENGINE — Musique d'ambiance gapless via Web Audio API
+   Source : SL_Pads_110_Cm.mp3 — AudioBufferSourceNode loop=true
    Déclenchement sur geste utilisateur (contrainte iOS Safari)
    ================================================================ */
 
 class AudioEngine {
   constructor() {
-    this.ctx          = null;
-    this.masterGain   = null;
-    this.nodes        = [];
+    this.ctx          = null;   // AudioContext
+    this.masterGain   = null;   // GainNode — contrôle du volume global
+    this.source       = null;   // AudioBufferSourceNode courant
+    this.buffer       = null;   // AudioBuffer décodé (réutilisable)
     this.initialized  = false;
+
+    /** Promise de chargement — play() l'attend si besoin */
+    this._loadPromise = null;
+
+    /** Timeout pour stop différé (laisse le fade-out se terminer) */
+    this._stopTimer   = null;
   }
 
-  /** Initialiser l'AudioContext depuis un geste utilisateur */
+  /* ── Initialisation sur geste utilisateur (exigence iOS Safari) ── */
+
   init() {
     if (this.initialized) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.ctx        = new (window.AudioContext || window.webkitAudioContext)();
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.value = 0;
     this.masterGain.connect(this.ctx.destination);
-    this._buildAmbient();
-    this.initialized = true;
+    this._loadPromise = this._loadBuffer();
+    this.initialized  = true;
   }
 
-  /** Génération procédurale : bruit marron filtré + drones sinusoïdaux */
-  _buildAmbient() {
-    const ctx = this.ctx;
+  /* ── Chargement + décodage asynchrone du fichier MP3 ── */
 
-    // ── 1. Bruit marron (white noise filtré à faible fréquence)
-    const sr = ctx.sampleRate;
-    const noiseBuffer = ctx.createBuffer(2, sr * 8, sr);
-    for (let ch = 0; ch < 2; ch++) {
-      const data = noiseBuffer.getChannelData(ch);
-      let lastOut = 0;
-      for (let i = 0; i < data.length; i++) {
-        const w = Math.random() * 2 - 1;
-        data[i] = (lastOut + 0.02 * w) / 1.02;
-        lastOut  = data[i];
-        data[i] *= 4;
-      }
+  async _loadBuffer() {
+    try {
+      const response    = await fetch('./SL_Pads_110_Cm.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      this.buffer       = await this.ctx.decodeAudioData(arrayBuffer);
+    } catch (err) {
+      console.warn('[AudioEngine] Impossible de charger SL_Pads_110_Cm.mp3', err);
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.loop   = true; // boucle parfaite (gapless natif)
-
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type            = 'lowpass';
-    noiseFilter.frequency.value = 160;
-    noiseFilter.Q.value         = 0.5;
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.07;
-
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.masterGain);
-    noise.start();
-
-    // ── 2. Drone fondamental : La1 (55 Hz)
-    const drone1 = this._createOsc(55, 'sine', 0.13);
-
-    // ── 3. Quinte : Mi2 (82.4 Hz)
-    const drone2 = this._createOsc(82.4, 'sine', 0.07);
-
-    // ── 4. Ton éthéré : La3 (220 Hz) + LFO très lent pour shimmer
-    const shimmer     = ctx.createOscillator();
-    shimmer.type      = 'sine';
-    shimmer.frequency.value = 220;
-    const shimmerLFO  = ctx.createOscillator();
-    shimmerLFO.type   = 'sine';
-    shimmerLFO.frequency.value = 0.07; // ~14s de période
-
-    const lfoGain     = ctx.createGain();
-    lfoGain.gain.value = 0.025;
-    const shimmerGain = ctx.createGain();
-    shimmerGain.gain.value = 0.035;
-
-    shimmerLFO.connect(lfoGain);
-    lfoGain.connect(shimmerGain.gain);
-    shimmer.connect(shimmerGain);
-    shimmerGain.connect(this.masterGain);
-    shimmer.start();
-    shimmerLFO.start();
-
-    this.nodes = [noise, drone1.osc, drone2.osc, shimmer, shimmerLFO];
   }
 
-  _createOsc(freq, type, gainValue) {
-    const osc  = this.ctx.createOscillator();
-    osc.type   = type;
-    osc.frequency.value = freq;
-    const gain = this.ctx.createGain();
-    gain.gain.value = gainValue;
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start();
-    return { osc, gain };
-  }
+  /* ── Lecture (mode Immersif uniquement) ──────────────────── */
 
-  play() {
+  async play() {
     if (!this.initialized) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    // Annuler tout stop différé en cours
+    clearTimeout(this._stopTimer);
+    this._stopTimer = null;
+
+    // Débloquer le contexte si iOS l'a suspendu
+    if (this.ctx.state === 'suspended') await this.ctx.resume();
+
+    // Attendre le décodage si le buffer n'est pas encore prêt
+    if (!this.buffer && this._loadPromise) await this._loadPromise;
+
+    // Créer la source seulement si elle n'existe pas (première lecture ou après stop)
+    if (!this.source && this.buffer) {
+      this.source        = this.ctx.createBufferSource();
+      this.source.buffer = this.buffer;
+      this.source.loop   = true;   // ← boucle parfaite, zéro micro-silence
+      this.source.connect(this.masterGain);
+      this.source.start(0);
+    }
+
+    // Fade-in doux (1.5 s de constante de temps)
     this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.masterGain.gain.setTargetAtTime(0.55, this.ctx.currentTime, 1.5); // fade-in doux
+    this.masterGain.gain.setTargetAtTime(0.72, this.ctx.currentTime, 1.5);
   }
+
+  /* ── Pause : fade-out du gain UNIQUEMENT ─────────────────── */
+  /*    La source continue à tourner silencieusement :          */
+  /*    la reprise est instantanée et sans gap.                 */
 
   pause() {
     if (!this.initialized) return;
     this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.6); // fade-out
+    this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.6);
   }
 
-  stop() { this.pause(); }
+  /* ── Stop complet : fade-out puis libération de la source ── */
+
+  stop() {
+    if (!this.initialized) return;
+    this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.6);
+
+    // Arrêter la source après la durée du fondu (~1.2 s = 2× constante)
+    const src    = this.source;
+    this.source  = null;
+    this._stopTimer = setTimeout(() => {
+      if (src) { try { src.stop(); } catch (_) {} }
+    }, 1200);
+  }
+
+  /* ── Destruction totale (navigation / garbage collect) ───── */
 
   destroy() {
-    this.nodes.forEach(n => { try { n.stop(); } catch (_) {} });
-    this.nodes = [];
-    if (this.ctx) { this.ctx.close(); }
+    clearTimeout(this._stopTimer);
+    if (this.source) { try { this.source.stop(); } catch (_) {} this.source = null; }
+    if (this.ctx)    { this.ctx.close(); }
     this.initialized = false;
+    this.buffer      = null;
   }
 }
 
 /* ================================================================
-   4. STARFIELD RENDERER — Canvas particles (mode Immersif)
+   4. STARFIELD RENDERER — 3D Warp perspective (mode Immersif)
+   Projection : (x/z)*FL + centre — étoiles radiant du centre
+   Traînées   : ligne pz→z par frame + overlay semi-transparent
    ================================================================ */
 
 class StarfieldRenderer {
@@ -369,19 +359,34 @@ class StarfieldRenderer {
     this.stars   = [];
     this.raf     = null;
     this.running = false;
+
+    /* ── Paramètres warp ─────────────────────── */
+    this.NUM_STARS = 180;
+    this.SPEED     = 2;      // unités z par frame (~3s pour traverser le champ)
+    this.MAX_Z     = 900;    // profondeur maximale du couloir
+    this.FL        = 280;    // focal length : contrôle l'ouverture angulaire
+    this.SPREAD    = 0.55;   // demi-amplitude x/y relative à MAX_Z
+  }
+
+  /* ── Fabrique d'une étoile à une profondeur aléatoire ── */
+  _spawn(z) {
+    const spread = this.MAX_Z * this.SPREAD;
+    return {
+      x:  (Math.random() - 0.5) * spread * 2,
+      y:  (Math.random() - 0.5) * spread * 2,
+      z:  z ?? (Math.random() * this.MAX_Z + 1),
+      pz: z ?? null, // sera initialisé au premier frame
+    };
   }
 
   _initStars() {
-    const { width: w, height: h } = this.canvas;
-    this.stars = Array.from({ length: 130 }, () => ({
-      x:             Math.random() * w,
-      y:             Math.random() * h,
-      r:             Math.random() * 1.4 + 0.2,
-      speed:         Math.random() * 0.12 + 0.04,
-      baseOpacity:   Math.random() * 0.55 + 0.2,
-      twinkleSpeed:  Math.random() * 0.008 + 0.002,
-      twinklePhase:  Math.random() * Math.PI * 2,
-    }));
+    // Distribution initiale étalée sur toute la profondeur (évite un « big bang »)
+    this.stars = Array.from(
+      { length: this.NUM_STARS },
+      () => this._spawn()
+    );
+    // Initialiser pz = z pour éviter des traînées parasites au démarrage
+    for (const s of this.stars) s.pz = s.z;
   }
 
   resize() {
@@ -405,18 +410,61 @@ class StarfieldRenderer {
 
   _tick() {
     if (!this.running) return;
-    const { ctx, canvas, stars } = this;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const { ctx, canvas, stars, FL, MAX_Z, SPEED } = this;
+    const cx = canvas.width  * 0.5;
+    const cy = canvas.height * 0.5;
+
+    /* ── Overlay d'atténuation : crée l'effet de traînée progressive ── */
+    ctx.fillStyle = 'rgba(11,19,43,0.3)';   // correspond à --c-immersive
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const s of stars) {
-      s.twinklePhase += s.twinkleSpeed;
-      const alpha = s.baseOpacity * (0.5 + 0.5 * Math.sin(s.twinklePhase));
+
+      /* Avancer l'étoile vers le spectateur */
+      s.pz = s.z;
+      s.z -= SPEED;
+
+      /* Recycler hors-champ ou trop proche */
+      if (s.z <= 1) {
+        Object.assign(s, this._spawn(MAX_Z));
+        s.pz = MAX_Z;
+        continue;
+      }
+
+      /* Projection perspective → coordonnées écran */
+      const sx = (s.x / s.z)  * FL + cx;
+      const sy = (s.y / s.z)  * FL + cy;
+      const px = (s.x / s.pz) * FL + cx;
+      const py = (s.y / s.pz) * FL + cy;
+
+      /* Rejeter si hors écran */
+      const margin = 80;
+      if (sx < -margin || sx > canvas.width  + margin ||
+          sy < -margin || sy > canvas.height + margin) {
+        Object.assign(s, this._spawn(MAX_Z));
+        s.pz = MAX_Z;
+        continue;
+      }
+
+      /* ── Luminosité et taille proportionnelles à la proximité ── */
+      const depth  = 1 - s.z / MAX_Z;          // 0 (loin) → 1 (proche)
+      const alpha  = Math.min(1, depth * 1.6);
+      const radius = Math.max(0.4, depth * 2.6);
+
+      /* ── Traînée : ligne de l'ancienne projection à la nouvelle ── */
+      const trailAlpha = alpha * 0.55;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+      ctx.moveTo(px, py);
+      ctx.lineTo(sx, sy);
+      ctx.strokeStyle = `rgba(200,220,255,${trailAlpha.toFixed(3)})`;
+      ctx.lineWidth   = radius * 0.9;
+      ctx.stroke();
+
+      /* ── Point lumineux en tête ── */
+      ctx.beginPath();
+      ctx.arc(sx, sy, radius * 0.55, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(230,240,255,${alpha.toFixed(3)})`;
       ctx.fill();
-      s.y -= s.speed;
-      if (s.y < -2) s.y = canvas.height + 2;
     }
 
     this.raf = requestAnimationFrame(() => this._tick());
@@ -717,7 +765,7 @@ class UIEngine {
               <span id="slider-value">${dur}s</span>
             </div>`
         }
-        <button class="btn-mode-toggle ${mode === 'immersive' ? 'active' : ''}" id="mode-toggle"
+        <button class="btn-mode-toggle ${mode === 'solid' ? 'active' : ''}" id="mode-toggle"
                 aria-label="Changer le mode d'affichage">
           ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
         </button>
