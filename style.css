@@ -171,13 +171,17 @@ body {
   gap: 10px;
 }
 
-/* Rangée 1 : slider seul, toujours la même hauteur
-   Invisible si masqué → les boutons en dessous ne bougent pas */
+/* Rangée 1 : [slider-group] [mode-toggle]
+   Le masquage s'applique UNIQUEMENT au slider-group,
+   pas au mode-toggle qui doit rester visible en toutes circonstances */
 .slider-row {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
-.slider-row.slider-hidden {
+
+/* Seul le slider-group est masqué — le mode-toggle ne l'est jamais */
+.slider-group.slider-hidden {
   visibility: hidden;
   pointer-events: none;
 }
@@ -187,13 +191,13 @@ body {
   display: flex;
 }
 
-/* Slider group — taille originale restaurée */
+/* Slider group : limité à 75% pour laisser de l'espace au mode-toggle */
 .slider-group {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 160px;
+  flex: 0 0 72%;   /* ~75% de la rangée, le reste pour le bouton */
+  min-width: 0;
 }
 
 .slider-group label {

@@ -706,8 +706,8 @@ class UIEngine {
     const sliderMax  = heroId === 'lymphatic' ? 5 : 8;
 
     this.$heroControls.innerHTML = `
-      <div class="slider-row${hideSlider ? ' slider-hidden' : ''}">
-        <div class="slider-group">
+      <div class="slider-row">
+        <div class="slider-group${hideSlider ? ' slider-hidden' : ''}">
           <label for="duration-slider">Durée base</label>
           <input type="range" id="duration-slider" min="2" max="${sliderMax}" step="1"
                  value="${dur}" aria-label="Durée de base en secondes"
@@ -788,7 +788,7 @@ class UIEngine {
   }
 
   _wimHofLevelHTML() {
-    const levels = ['Débutant (60s)', 'Moyen (90s)', 'Avancé (120s)'];
+    const levels = ['60s', '90s', '120s'];
     const current = this.app.wimHofLevel;
     return `
       <div class="wim-hof-level">
