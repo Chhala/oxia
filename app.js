@@ -938,7 +938,7 @@ class UIEngine {
       this.$phaseBg.style.backgroundColor = '#0B132B';
     }
 
-    this.showControls(true);
+    this.showControls(); // affichage initial puis auto-hide après 3.5 s
   }
 
   hidePlayer() {
