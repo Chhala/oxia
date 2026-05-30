@@ -707,13 +707,16 @@ class UIEngine {
 
     this.$heroControls.innerHTML = `
       <div class="slider-row">
-        <div class="slider-group${hideSlider ? ' slider-hidden' : ''}">
-          <label for="duration-slider">Durée base</label>
-          <input type="range" id="duration-slider" min="2" max="${sliderMax}" step="1"
-                 value="${dur}" aria-label="Durée de base en secondes"
-                 ${hideSlider ? 'tabindex="-1" aria-hidden="true"' : ''}>
-          <span id="slider-value">${dur}s</span>
-        </div>
+        ${heroId === 'wim_hof'
+          ? this._wimHofInlineHTML()
+          : `<div class="slider-group${hideSlider ? ' slider-hidden' : ''}">
+              <label for="duration-slider">Durée base</label>
+              <input type="range" id="duration-slider" min="2" max="${sliderMax}" step="1"
+                     value="${dur}" aria-label="Durée de base en secondes"
+                     ${hideSlider ? 'tabindex="-1" aria-hidden="true"' : ''}>
+              <span id="slider-value">${dur}s</span>
+            </div>`
+        }
         <button class="btn-mode-toggle ${mode === 'immersive' ? 'active' : ''}" id="mode-toggle"
                 aria-label="Changer le mode d'affichage">
           ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
@@ -724,7 +727,6 @@ class UIEngine {
           ▶ Démarrer
         </button>
       </div>
-      ${heroId === 'wim_hof' ? this._wimHofLevelHTML() : ''}
     `;
 
     // Slider events (inerte si caché)
@@ -787,15 +789,17 @@ class UIEngine {
     });
   }
 
-  _wimHofLevelHTML() {
-    const levels = ['60s', '90s', '120s'];
+  /** Sélecteur d'apnée Wim Hof — version inline pour la slider-row */
+  _wimHofInlineHTML() {
     const current = this.app.wimHofLevel;
+    const levels  = ['60s', '90s', '120s'];
     return `
-      <div class="wim-hof-level">
-        <label>Niveau apnée</label>
+      <div class="wim-hof-inline">
+        <span class="wim-hof-label">Apnée</span>
         <div class="level-btns">
           ${levels.map((l, i) => `
-            <button class="level-btn ${i === current ? 'active' : ''}" data-level="${i}">${l}</button>
+            <button class="level-btn ${i === current ? 'active' : ''}"
+                    data-level="${i}">${l}</button>
           `).join('')}
         </div>
       </div>

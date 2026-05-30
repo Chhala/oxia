@@ -272,13 +272,15 @@ body {
 }
 .btn-hero-play:active { opacity: 0.85; transform: scale(0.97); }
 
-/* Wim Hof Level Selector */
-.wim-hof-level {
+/* Wim Hof Level — version inline dans la slider-row */
+.wim-hof-inline {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: 0 0 72%;   /* même proportion que .slider-group */
+  min-width: 0;
 }
-.wim-hof-level label {
+.wim-hof-label {
   font-size: 12px;
   color: var(--c-text-muted);
   white-space: nowrap;
