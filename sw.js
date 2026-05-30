@@ -4,7 +4,7 @@
  * Permet le fonctionnement hors-ligne (PWA iOS)
  */
 
-const CACHE_NAME = 'oxia-v1';
+const CACHE_NAME = 'oxia-v2';
 const ASSETS = [
   './',
   './index.html',
