@@ -706,8 +706,8 @@ class UIEngine {
     const sliderMax  = heroId === 'lymphatic' ? 5 : 8;
 
     this.$heroControls.innerHTML = `
-      <div class="controls-row">
-        <div class="slider-group${hideSlider ? ' slider-hidden' : ''}">
+      <div class="slider-row${hideSlider ? ' slider-hidden' : ''}">
+        <div class="slider-group">
           <label for="duration-slider">Durée base</label>
           <input type="range" id="duration-slider" min="2" max="${sliderMax}" step="1"
                  value="${dur}" aria-label="Durée de base en secondes"
@@ -718,6 +718,8 @@ class UIEngine {
                 aria-label="Changer le mode d'affichage">
           ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
         </button>
+      </div>
+      <div class="action-row">
         <button class="btn-hero-play" id="btn-hero-play" aria-label="Démarrer l'exercice">
           ▶ Démarrer
         </button>
@@ -725,7 +727,7 @@ class UIEngine {
       ${heroId === 'wim_hof' ? this._wimHofLevelHTML() : ''}
     `;
 
-    // Slider events (toujours bindé mais inerte si caché)
+    // Slider events (inerte si caché)
     if (!hideSlider) {
       const slider    = document.getElementById('duration-slider');
       const sliderVal = document.getElementById('slider-value');

@@ -171,28 +171,29 @@ body {
   gap: 10px;
 }
 
-/* controls-row : le slider occupe toujours sa place (flex:1)
-   même masqué (visibility:hidden), afin de stabiliser la position
-   des boutons Mode et Démarrer */
-.controls-row {
+/* Rangée 1 : slider seul, toujours la même hauteur
+   Invisible si masqué → les boutons en dessous ne bougent pas */
+.slider-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+}
+.slider-row.slider-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
-/* Slider group */
+/* Rangée 2 : Démarrer seul */
+.action-row {
+  display: flex;
+}
+
+/* Slider group — taille originale restaurée */
 .slider-group {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: 1;
-  min-width: 0;   /* évite overflow sur flex */
-}
-
-/* Quand le slider est masqué : invisible mais occupe la place */
-.slider-group.slider-hidden {
-  visibility: hidden;
-  pointer-events: none;
+  min-width: 160px;
 }
 
 .slider-group label {
@@ -203,7 +204,6 @@ body {
 
 .slider-group input[type="range"] {
   flex: 1;
-  min-width: 0;
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
