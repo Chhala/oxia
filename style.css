@@ -171,11 +171,13 @@ body {
   gap: 10px;
 }
 
+/* controls-row : le slider occupe toujours sa place (flex:1)
+   même masqué (visibility:hidden), afin de stabiliser la position
+   des boutons Mode et Démarrer */
 .controls-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 /* Slider group */
@@ -184,7 +186,13 @@ body {
   align-items: center;
   gap: 8px;
   flex: 1;
-  min-width: 160px;
+  min-width: 0;   /* évite overflow sur flex */
+}
+
+/* Quand le slider est masqué : invisible mais occupe la place */
+.slider-group.slider-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .slider-group label {
@@ -195,6 +203,7 @@ body {
 
 .slider-group input[type="range"] {
   flex: 1;
+  min-width: 0;
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
@@ -232,6 +241,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -263,19 +273,20 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 .wim-hof-level label {
   font-size: 12px;
   color: var(--c-text-muted);
+  white-space: nowrap;
 }
 .level-btns {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 5px;
+  flex-wrap: nowrap;   /* forcer 1 ligne */
+  flex: 1;
 }
 .level-btn {
-  padding: 6px 12px;
+  padding: 6px 8px;    /* réduit de 12px → 8px pour tenir sur 1 ligne */
   border-radius: 8px;
   border: 1.5px solid var(--c-border);
   background: transparent;
@@ -504,6 +515,13 @@ body {
 /* Immersive: glow on circle */
 .player.mode-immersive .breath-circle {
   background: rgba(255,255,255,0.02);
+}
+
+/* Mode immersif : pas de cercle — le starfield est l'ambiance visuelle */
+.player.mode-immersive .breath-circle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
 }
 
 /* Phase label (small, above main text) */

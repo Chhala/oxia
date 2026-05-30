@@ -1,6 +1,6 @@
 {
   "name": "Oxia — SouffleS",
-  "short_name": "Oxia — SouffleS",
+  "short_name": "Oxia",
   "description": "6 protocoles de respiration guidés",
   "start_url": "./index.html",
   "display": "standalone",

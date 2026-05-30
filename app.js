@@ -16,7 +16,7 @@ const PROTOCOLS = {
   physiological_sigh: {
     id: 'physiological_sigh',
     name: 'Soupir Physiologique',
-    icon: '🌬️',
+    icon: '🤍',
     summary: 'Calme immédiat. Réduit l\'anxiété en moins de 30 secondes.',
     info: {
       goal: 'Calme immédiat, réduction de l\'anxiété et de la pression. Récupération rapide après un pic de stress.',
@@ -39,7 +39,7 @@ const PROTOCOLS = {
   cardiac_coherence: {
     id: 'cardiac_coherence',
     name: 'Cohérence Cardiaque',
-    icon: '💚',
+    icon: '🪷',
     summary: 'Régule le stress chronique. Effets bénéfiques jusqu\'à 4h après.',
     info: {
       goal: 'Routine quotidienne pour réguler le stress chronique, améliorer la digestion et optimiser la Variabilité de la Fréquence Cardiaque (VFC).',
@@ -61,8 +61,8 @@ const PROTOCOLS = {
   wim_hof: {
     id: 'wim_hof',
     name: 'Méthode Wim Hof',
-    icon: '❄️',
-    summary: 'Boost d\'énergie et immunité. Validé cliniquement (Radboud, 2014).',
+    icon: '🔋',
+    summary: 'Boost d\'énergie et immunité. Récupération musculaire.',
     info: {
       goal: 'Boost d\'énergie et immunité. Idéal le matin, pour tolérer le froid ou stimuler la récupération musculaire via l\'hormèse (stress positif).',
       origin: 'Créée par Wim Hof (« L\'Homme de Glace »), inspirée du Yoga Tummo tibétain ancestral.',
@@ -101,7 +101,7 @@ const PROTOCOLS = {
   box_breathing: {
     id: 'box_breathing',
     name: 'Respiration au Carré',
-    icon: '⬛',
+    icon: '🧠',
     summary: 'Clarté mentale et sang-froid. La méthode des forces spéciales.',
     info: {
       goal: 'Clarté mentale, concentration accrue, gestion de l\'anxiété avant une prise de parole, un examen ou une décision importante.',
@@ -125,7 +125,7 @@ const PROTOCOLS = {
   lymphatic: {
     id: 'lymphatic',
     name: 'Respiration Lymphatique',
-    icon: '🔋',
+    icon: '🧬',
     summary: 'Stimulation immunitaire et détoxification. Ratio 1:4:2.',
     info: {
       goal: 'Stimulation du système immunitaire, activation de la circulation lymphatique, oxygénation cellulaire et détoxification mécanique.',
@@ -152,11 +152,11 @@ const PROTOCOL_DEFAULTS = {
   wim_hof:            3,  // fixe (slider masqué)
   four_seven_eight:   4,  // 4 / 7 / 8s — ratio scientifique exact
   box_breathing:      4,  // 4 / 4 / 4 / 4s — valeur Navy SEALs
-  lymphatic:          3,  // 3 / 12 / 6s — ratio 1:4:2 raisonnable
+  lymphatic:          3,  // 3 / 12 / 6s — ratio 1:4:2 (max 5s = hold 20s)
 };
 
 /** Protocoles pour lesquels le slider est masqué (durée fixe) */
-const PROTOCOLS_NO_SLIDER = new Set(['cardiac_coherence', 'wim_hof']);
+const PROTOCOLS_NO_SLIDER = new Set(['cardiac_coherence', 'wim_hof', 'four_seven_eight']);
 
 /** Ordre de référence (tri à égalité de score) */
 const PROTOCOL_ORDER = [
@@ -700,19 +700,20 @@ class UIEngine {
       .addEventListener('click', e => { e.stopPropagation(); this.app.openInfo(heroId); });
 
     // ── Contrôles héros
-    const mode      = this.app.mode;
+    const mode       = this.app.mode;
     const hideSlider = PROTOCOLS_NO_SLIDER.has(heroId);
     const dur        = this.app.baseDuration;
+    const sliderMax  = heroId === 'lymphatic' ? 5 : 8;
 
     this.$heroControls.innerHTML = `
       <div class="controls-row">
-        ${hideSlider ? '' : `
-        <div class="slider-group">
+        <div class="slider-group${hideSlider ? ' slider-hidden' : ''}">
           <label for="duration-slider">Durée base</label>
-          <input type="range" id="duration-slider" min="2" max="8" step="1"
-                 value="${dur}" aria-label="Durée de base en secondes">
+          <input type="range" id="duration-slider" min="2" max="${sliderMax}" step="1"
+                 value="${dur}" aria-label="Durée de base en secondes"
+                 ${hideSlider ? 'tabindex="-1" aria-hidden="true"' : ''}>
           <span id="slider-value">${dur}s</span>
-        </div>`}
+        </div>
         <button class="btn-mode-toggle ${mode === 'immersive' ? 'active' : ''}" id="mode-toggle"
                 aria-label="Changer le mode d'affichage">
           ${mode === 'solid' ? 'Couleurs' : 'Immersif'}
@@ -724,7 +725,7 @@ class UIEngine {
       ${heroId === 'wim_hof' ? this._wimHofLevelHTML() : ''}
     `;
 
-    // Slider events (uniquement si slider présent)
+    // Slider events (toujours bindé mais inerte si caché)
     if (!hideSlider) {
       const slider    = document.getElementById('duration-slider');
       const sliderVal = document.getElementById('slider-value');
@@ -785,7 +786,7 @@ class UIEngine {
   }
 
   _wimHofLevelHTML() {
-    const levels = ['Débutant (60s)', 'Intermédiaire (90s)', 'Avancé (120s)'];
+    const levels = ['Débutant (60s)', 'Moyen (90s)', 'Avancé (120s)'];
     const current = this.app.wimHofLevel;
     return `
       <div class="wim-hof-level">
@@ -825,7 +826,7 @@ class UIEngine {
         <p>${p.info.science}</p>
       </div>
       <div class="sheet-section sheet-sequence">
-        <div class="sheet-label">⏱ Séquence (X = ${this.app.baseDuration}s)</div>
+        <div class="sheet-label">⏱ Séquence</div>
         ${this._sequenceHTML(id)}
       </div>
     `;
