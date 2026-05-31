@@ -29,9 +29,9 @@ const PROTOCOLS = {
     hasWimHofLevel: false,
     getPhases(X) {
       return [
-        { text: 'Inspirez profondément par le nez', duration: X, type: 'inhale' },
-        { text: 'Micro-inspiration rapide — bloquez au max', duration: 1, type: 'hold' },
-        { text: 'Expirez longuement et relâchez par la bouche', duration: X * 2, type: 'exhale' },
+        { text: 'Inspirez profondément\npar le nez', duration: X, type: 'inhale' },
+        { text: 'Micro-inspiration rapide\n— bloquez au max', duration: 1, type: 'hold' },
+        { text: 'Expirez longuement\net relâchez par la bouche', duration: X * 2, type: 'exhale' },
       ];
     }
   },
@@ -52,7 +52,7 @@ const PROTOCOLS = {
     hasWimHofLevel: false,
     getPhases() {
       return [
-        { text: 'Inspirez par le nez en gonflant le ventre', duration: 5, type: 'inhale' },
+        { text: 'Inspirez par le nez\nen gonflant le ventre', duration: 5, type: 'inhale' },
         { text: 'Expirez par la bouche lentement', duration: 5, type: 'exhale' },
       ];
     }
@@ -61,6 +61,7 @@ const PROTOCOLS = {
   wim_hof: {
     id: 'wim_hof',
     name: 'Méthode Wim Hof',
+    tileName: 'Méthode\nWim Hof',
     icon: '🔋',
     summary: 'Boost d\'énergie et immunité. Récupération musculaire.',
     info: {
@@ -78,6 +79,7 @@ const PROTOCOLS = {
   four_seven_eight: {
     id: 'four_seven_eight',
     name: 'Méthode 4-7-8',
+    tileName: 'Méthode\n4-7-8',
     icon: '🌙',
     summary: 'Endormissement profond. Stimule le nerf vague pour un effet sédatif.',
     info: {
@@ -93,7 +95,7 @@ const PROTOCOLS = {
       return [
         { text: 'Inspirez discrètement par le nez', duration: X, type: 'inhale' },
         { text: 'Bloquez votre respiration', duration: X * 1.75, type: 'hold' },
-        { text: 'Expirez bruyamment par la bouche (son Whoosh)', duration: X * 2, type: 'exhale' },
+        { text: 'Expirez bruyamment\npar la bouche (son Whoosh)', duration: X * 2, type: 'exhale' },
       ];
     }
   },
@@ -101,6 +103,7 @@ const PROTOCOLS = {
   box_breathing: {
     id: 'box_breathing',
     name: 'Respiration au Carré',
+    tileName: 'Respiration\nau Carré',
     icon: '🧠',
     summary: 'Clarté mentale et sang-froid. La méthode des forces spéciales.',
     info: {
@@ -139,7 +142,7 @@ const PROTOCOLS = {
     getPhases(X) {
       return [
         { text: 'Inspirez profondément par le nez', duration: X, type: 'inhale' },
-        { text: 'Bloquez (compression lymphatique)', duration: X * 4, type: 'hold' },
+        { text: 'Bloquez\n(compression lymphatique)', duration: X * 4, type: 'hold' },
         { text: 'Expirez lentement et contrôlez', duration: X * 2, type: 'exhale' },
       ];
     }
@@ -816,7 +819,7 @@ class UIEngine {
         <div class="proto-tile" data-id="${id}" role="listitem button" tabindex="0"
              aria-label="${p.name}">
           <span class="tile-emoji">${p.icon}</span>
-          <span class="tile-name">${p.name}</span>
+          <span class="tile-name">${p.tileName || p.name}</span>
           <button class="tile-info-btn" data-id="${id}" aria-label="Info ${p.name}">?</button>
         </div>
       `;
