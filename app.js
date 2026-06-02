@@ -113,7 +113,7 @@ const PROTOCOLS = {
     },
     stopCondition: 'timer',
     totalCycles: null,
-    totalTime: 300, // 5 min
+    totalTime: null, // calculé dynamiquement au lancement (≈ 300s, cycle complet)
     hasWimHofLevel: false,
     getPhases(X) {
       return [
@@ -135,9 +135,9 @@ const PROTOCOLS = {
       origin: 'Popularisée par Tony Robbins dans ses programmes de santé intégrative (« Power Breathing »).',
       science: 'Documentée. Le système lymphatique utilise les variations de pression intra-thoracique pour circuler et filtrer les toxines. Le ratio 1:4:2 maximise cet effet de pompe mécanique.'
     },
-    stopCondition: 'timer',
-    totalCycles: null,
-    totalTime: 300, // 5 min
+    stopCondition: 'cycle',
+    totalCycles: 10,
+    totalTime: null,
     hasWimHofLevel: false,
     getPhases(X) {
       return [
@@ -496,6 +496,9 @@ class BreathingEngine {
     this.queueIndex   = 0;
     this.phaseElapsed = 0;  // ms
     this.totalElapsed = 0;  // ms
+    this._totalTimeMs = PROTOCOLS[protocolId].totalTime
+      ? PROTOCOLS[protocolId].totalTime * 1000
+      : null; // calculé dans _buildQueue pour box_breathing
 
     this._interval          = null;
     this._lastTick          = null;
@@ -542,10 +545,17 @@ class BreathingEngine {
         }
       }
     } else {
-      // timer-based : pré-générer assez de cycles pour couvrir totalTime
-      const phases = p.getPhases(this.X);
+      // timer-based : calculer totalTime si null (arrondi au cycle complet ≈ 300s)
+      const phases        = p.getPhases(this.X);
       const cycleDuration = phases.reduce((s, ph) => s + ph.duration * 1000, 0);
-      const maxCycles = Math.ceil((p.totalTime * 1000) / cycleDuration) + 2;
+      const totalMs       = p.totalTime
+        ? p.totalTime * 1000
+        : Math.round(300000 / cycleDuration) * cycleDuration;
+
+      // Stocker sur l'instance pour que _tick et onTick y accèdent
+      this._totalTimeMs = totalMs;
+
+      const maxCycles = Math.ceil(totalMs / cycleDuration) + 1;
       for (let c = 0; c < maxCycles; c++) {
         for (const ph of phases) {
           queue.push({ ...ph, duration: ph.duration * 1000 });
@@ -599,7 +609,7 @@ class BreathingEngine {
 
     // Condition d'arrêt timer-based
     const p = this.protocol;
-    if (p.stopCondition === 'timer' && this.totalElapsed >= p.totalTime * 1000) {
+    if (p.stopCondition === 'timer' && this.totalElapsed >= this._totalTimeMs) {
       this._complete();
       return;
     }
@@ -624,7 +634,7 @@ class BreathingEngine {
         phaseElapsed:  this.phaseElapsed,
         phaseDuration: cur.duration,
         totalElapsed:  this.totalElapsed,
-        totalDuration: p.totalTime ? p.totalTime * 1000 : null,
+        totalDuration: this._totalTimeMs ?? null,
       });
     }
   }
@@ -898,7 +908,7 @@ class UIEngine {
     if (id === 'wim_hof') {
       return `
         <div class="seq-phase inhale">Phase A · 30× [ Inspire 3s + Expire 2s ]</div>
-        <div class="seq-phase hold">Phase B · Apnée poumons vides : Débutant 60s · Inter. 90s · Avancé 120s</div>
+        <div class="seq-phase hold">Phase B · Apnée poumons vides : Débutant 60s · Intermédiaire 90s · Avancé 120s</div>
         <div class="seq-phase inhale">Phase C · Inspire 3s → Rétention 15s → Expire 2s</div>
         <div class="seq-note">Répétés × 3 grands rounds</div>
       `;
