@@ -539,9 +539,13 @@ class BreathingEngine {
         queue.push({ text: r < 2 ? 'Relâchez — prochain round…' : 'Relâchez — Terminé ! ✓', duration: 2000,  type: 'exhale', label: `${roundLabel} · Relâche` });
       }
     } else if (p.stopCondition === 'cycle') {
+      const phases        = p.getPhases(this.X);
+      const cycleDuration = phases.reduce((s, ph) => s + ph.duration * 1000, 0);
+      this._totalTimeMs   = p.totalCycles * cycleDuration;
+
       for (let c = 0; c < p.totalCycles; c++) {
-        for (const ph of p.getPhases(this.X)) {
-          queue.push({ ...ph, duration: ph.duration * 1000, label: `Cycle ${c + 1}/${p.totalCycles}` });
+        for (const ph of phases) {
+          queue.push({ ...ph, duration: ph.duration * 1000 });
         }
       }
     } else {
@@ -1171,8 +1175,6 @@ class App {
 
         onPhaseChange: (phase) => {
           this.ui.onPhaseChange(phase, this.mode);
-          // Contrôles visibles au changement de phase en mode solid uniquement
-          if (this.mode === 'solid') this.ui.showControls();
         },
 
         onTick: (data) => this.ui.onTick(data),
